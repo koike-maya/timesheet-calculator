@@ -577,7 +577,11 @@
             // テーブルを再構築
             buildTable();
             loadSettings();
-            calculateAll();
+            
+            // 全ての行の計算を実行（データ復元時）
+            setTimeout(() => {
+                recalculateAllRows();
+            }, 100);
         }
 
         function buildTable() {
@@ -604,6 +608,11 @@
                     <td class="overtimePay">¥0</td>
                     <td class="dailyTotal">¥0</td>
                 `;
+                
+                // 入力データがある場合は即座に計算を実行
+                if (dayData.start && dayData.end) {
+                    updateRowCalculation(row);
+                }
             }
         }
 
@@ -921,6 +930,19 @@
             }
         }
 
+        // 全体の再計算を強制実行
+        function forceRecalculateAll() {
+            const rows = document.querySelectorAll('#timesheetBody tr');
+            rows.forEach(row => {
+                const startInput = row.cells[1].querySelector('input');
+                const endInput = row.cells[2].querySelector('input');
+                if (startInput.value && endInput.value) {
+                    updateRowCalculation(row);
+                }
+            });
+            calculateAll();
+        }
+
         function formatTime(minutes) {
             const hours = Math.floor(minutes / 60);
             const mins = Math.round(minutes % 60);
@@ -939,6 +961,11 @@
         window.onload = function() {
             initializeApp();
             initializeFirstTimeSettings();
+            
+            // 少し遅れて再計算を実行（確実にデータが読み込まれてから）
+            setTimeout(() => {
+                forceRecalculateAll();
+            }, 200);
         };
 
         // ページ離脱時にデータを自動保存
